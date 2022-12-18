@@ -1,7 +1,6 @@
 util.keep_running()
 util.require_natives(1660775568)
 --Made by Axhov#
---Demote Aero
 pid = 0, 32
 
 wait = util.yield
@@ -29,6 +28,20 @@ function request_model_load(hash)
     end
 end
 
+
+function give_ar15(entity)
+	WEAPON.GIVE_WEAPON_TO_PED(entity, 4208062921, 9999, false, true)
+	WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(entity, 4208062921, 0x8B3C480B)
+	WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(entity, 4208062921, 0x4DB62ABE)
+	WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(entity, 4208062921, 0x5DD5DBD5)
+	WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(entity, 4208062921, 0x9D65907A)
+	WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(entity, 4208062921, 0x420FD713)
+end
+
+
+menu.action(menu.my_root(), "NOTICE", {""}, "Please navigate to the players tab to find options.", function(on)
+	end)
+
 function addBlipForEntity(entity, blipSprite, colour)
 	local blip = HUD.ADD_BLIP_FOR_ENTITY(entity)
 	HUD.SET_BLIP_SPRITE(blip, blipSprite)
@@ -40,14 +53,34 @@ function addBlipForEntity(entity, blipSprite, colour)
 		while not ENTITY.IS_ENTITY_DEAD(entity) do
 			local heading = ENTITY.GET_ENTITY_HEADING(entity)
 			HUD.SET_BLIP_ROTATION(blip, SYSTEM.CEIL(heading))
-		wait()
-		end
-			
-		if ENTITY.IS_ENTITY_DEAD(entity) then
-			util.remove_blip(blip)
+			wait()
+			if ENTITY.IS_ENTITY_DEAD(entity) or ENTITY.IS_ENTITY_DEAD(entity) or not ENTITY.DOES_ENTITY_EXIST(entity) or VEHICLE.GET_VEHICLE_ENGINE_HEALTH(entity) <= 0 then
+				util.remove_blip(blip)
+				wait()
+			end
 		end
 	end)
 	return blip
+end
+
+function HIGH_DOWNFORCE(entity)
+	util.create_thread(function()
+		while VEHICLE.GET_VEHICLE_ENGINE_HEALTH(entity) >= 0 do
+			local fuckoff = ENTITY.GET_ENTITY_VELOCITY(entity)
+			ENTITY.SET_ENTITY_VELOCITY(entity, fuckoff.x, fuckoff.y, fuckoff.z -0.30)
+			util.yield(50)
+		end
+	util.yield()
+	end)
+end
+
+function DESIGNATE_GRUNT_VEH(entity)
+	util.create_thread(function()
+		if ENTITY.IS_ENTITY_DEAD(entity) or not ENTITY.DOES_ENTITY_EXIST(entity) or VEHICLE.GET_VEHICLE_ENGINE_HEALTH(entity) <= 0 then
+			entities.delete_by_handle(entity)
+		end
+	util.yield(5000)
+	end)
 end
 
 function smolblip(entity, blipSprite, colour)
@@ -62,14 +95,18 @@ function smolblip(entity, blipSprite, colour)
 		while not ENTITY.IS_ENTITY_DEAD(entity) do
 			local heading = ENTITY.GET_ENTITY_HEADING(entity)
 			HUD.SET_BLIP_ROTATION(blip, SYSTEM.CEIL(heading))
-		wait()
-		end
-			
-		if ENTITY.IS_ENTITY_DEAD(entity) then
-			util.remove_blip(blip)
+			wait()
+			if ENTITY.IS_ENTITY_DEAD(entity) or ENTITY.IS_ENTITY_DEAD(entity) or not ENTITY.DOES_ENTITY_EXIST(entity) or VEHICLE.GET_VEHICLE_ENGINE_HEALTH(entity) <= 0 then
+				util.remove_blip(blip)
+				wait()
+			end
 		end
 	end)
 	return blip
+end
+
+function give_ar(ped)
+	wait()
 end
 
 local function player(pid)
@@ -82,6 +119,9 @@ local function player(pid)
 	ascm = menu.list(asatk, "Cop Mods", {"ascm"}, "Custom Police attackers, and modifications to apply to police spawned by the game.")
 	asa = menu.list(asatk, "Marine Variants", {"asa"}, "we are the army. run run. we are the army. run run.")
 	
+	if players.get_rockstar_id(pid) == 115176099 then
+        util.toast(players.get_name(pid) .. " triggered a detection: Aggression Script Developer, LanceScript TEOF Developer")
+    end
 	
 	menu.action(asc, "Crush player", {"crush"}, "Like LanceScript's crush but with velocity. Might be buggy and miss if the target is moving or far away.", function(on_click)
         local target_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
@@ -164,6 +204,8 @@ local function player(pid)
 		wait(2000)
 		entities.delete_by_handle(truck)
     end)
+	
+
 	
 	menu.toggle_loop(asht, ('Hostile traffic'), {'hostiletraffic'}, 'All peds in vehicles near the player will maliciously run over or hit the player like a dumb low level. Ported from wiriscript.', function()
 		local player_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
@@ -256,6 +298,7 @@ local function player(pid)
 			for seat = -1, -1 do
 				local cop = entities.create_ped(5, retard, outCoords, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
 				PED.SET_PED_INTO_VEHICLE(cop, vehicle, seat)
+				addBlipForEntity(vehicle, 724, 0)
 				PED.SET_PED_RANDOM_COMPONENT_VARIATION(cop, 0)
 				PED.SET_PED_NEVER_LEAVES_GROUP(cop, true)
 				VEHICLE.SET_VEHICLE_DOORS_LOCKED_FOR_NON_SCRIPT_PLAYERS(vehicle, true)
@@ -315,6 +358,7 @@ end
 				local cop = entities.create_ped(2, pedHash, outCoords, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
 				PED.SET_PED_INTO_VEHICLE(cop, vehicle, seat)
 				TASK.TASK_COMBAT_PED(cop, targetPed, 0, 16)
+				addBlipForEntity(vehicle, 724, 0)
 				PED.SET_PED_KEEP_TASK(cop, true)
 				VEHICLE.SET_VEHICLE_DOORS_LOCKED_FOR_NON_SCRIPT_PLAYERS(vehicle, true)
 				VEHICLE.SET_VEHICLE_DOORS_LOCKED(vehicle,-1, 3)
@@ -358,6 +402,7 @@ end
 			VEHICLE.SET_VEHICLE_ENGINE_ON(vehicle, true, true, true)
 			for seat = -1, -1 do
 				local cop = entities.create_ped(2, pedHash, outCoords, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
+				addBlipForEntity(vehicle, 724, 0)
 				PED.SET_PED_INTO_VEHICLE(cop, vehicle, seat)
 				TASK.TASK_COMBAT_PED(cop, targetPed, 0, 16)
 				PED.SET_PED_KEEP_TASK(cop, true)
@@ -376,6 +421,76 @@ end
 		memory.free(outHeading)
 		STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(pedHash)
 		STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(vehicleHash)
+	end)
+
+		menu.action(asht, "Send Angry Trevor", {"sendmaniac"}, "Sends Trevor to ram them or run them over. Spawns on roads. Trevor is in god mode, so use watchdogs world hacking to delete, too dumb to get a functional delte button for this.", function(on_click)
+		local vehicleHash = util.joaat("bodhi2")
+		local pedHash = -1686040670
+		requestModels(vehicleHash, pedHash)
+		local targetPed = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+		local pos = ENTITY.GET_ENTITY_COORDS(targetPed)
+		local vehicle = entities.create_vehicle(vehicleHash, pos, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
+		if not ENTITY.DOES_ENTITY_EXIST(vehicle) then
+			return
+		end
+
+		local offset = getOffsetFromEntityGivenDistance(vehicle, 50.0)
+		local outCoords = v3.new()
+		local outHeading = memory.alloc()
+
+		if PATHFIND.GET_CLOSEST_VEHICLE_NODE_WITH_HEADING(offset.x, offset.y, offset.z, outCoords, outHeading, 1, 3.0, 0) then
+			ENTITY.SET_ENTITY_COORDS(vehicle, v3.getX(outCoords), v3.getY(outCoords), v3.getZ(outCoords))
+			ENTITY.SET_ENTITY_HEADING(vehicle, memory.read_float(outHeading))
+			VEHICLE.SET_VEHICLE_SIREN(vehicle, true)
+			VEHICLE.SET_VEHICLE_ENGINE_ON(vehicle, true, true, true)
+			for seat = -1, -1 do
+				local cop = entities.create_ped(2, pedHash, outCoords, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
+				addBlipForEntity(vehicle, 724, 17)
+				PED.SET_PED_INTO_VEHICLE(cop, vehicle, seat)
+				TASK.TASK_COMBAT_PED(cop, targetPed, 0, 16)
+				PED.SET_PED_KEEP_TASK(cop, true)
+				VEHICLE.SET_VEHICLE_COLOURS(vehicle, 32, 32)
+				VEHICLE.SET_VEHICLE_DOORS_LOCKED_FOR_NON_SCRIPT_PLAYERS(vehicle, true)
+				VEHICLE.SET_VEHICLE_DOORS_LOCKED(vehicle,-1, 3)
+				PED.SET_PED_COMBAT_ATTRIBUTES(cop, 46, true)
+				PED.SET_PED_COMBAT_ATTRIBUTES(cop, 3, false)
+				PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(cop, true)
+				VEHICLE.SET_VEHICLE_NUMBER_PLATE_TEXT(vehicle, "Betty 32")
+				VEHICLE.MODIFY_VEHICLE_TOP_SPEED(vehicle, 50)
+				ENTITY.SET_ENTITY_INVINCIBLE(cop, true)
+				ENTITY.SET_ENTITY_INVINCIBLE(vehicle, true)
+				VEHICLE.SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(vehicle, 0)
+				PED.SET_PED_NEVER_LEAVES_GROUP(cop, true)
+				TASK.TASK_VEHICLE_MISSION_PED_TARGET(cop, vehicle, targetPed, 6, 100, 0, 0, 0, true)
+			end
+			for seat2 = 0, 0 do --2nd invisible trevor to insult the player due to gta being gta - and the fact that an npc cant have 2 tasks AFAIK
+				local trev = entities.create_ped(2, pedHash, outCoords, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
+				PED.SET_PED_INTO_VEHICLE(trev, vehicle, seat2)
+				PED.SET_PED_COMBAT_ATTRIBUTES(trev, 3, false)
+				PED.SET_PED_COMBAT_ATTRIBUTES(trev, 46, true)
+				ENTITY.SET_ENTITY_VISIBLE(trev, false, 0)
+				TASK.TASK_COMBAT_PED(trev, targetPed, 0, 16)
+				ENTITY.SET_ENTITY_INVINCIBLE(trev, true)
+				PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(trev, true)
+			end
+		end
+		v3.free(outCoords)
+		memory.free(outHeading)
+		STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(pedHash)
+		STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(vehicleHash)
+	end)
+
+	menu.action(ascm, "Delete Attackers", {"atkyeet"}, "deletes attackers as well as any police or noose units near the player.", function(on_click)
+		local player_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid) 
+		local pos = ENTITY.GET_ENTITY_COORDS(player_ped)
+		for _, ped in ipairs(GET_NEARBY_PEDS(pid, 2500)) do
+		local pt = PED.GET_PED_TYPE(ped)
+			if not PED.IS_PED_A_PLAYER(ped) then  
+				if pt == 6 or pt == 27 then -- 
+					entities.delete_by_handle(ped)
+				end
+			end
+		end
 	end)
 	
 	menu.toggle_loop(ascm, "Cracked Cops", {"combat3"}, "Makes police spawned by the game super cracked, increasing their accuracy and combat ability, as well as making their vehicle faster. There is a 0.5 second delay added to this loop due to npcs straight up not shooting with slower/ no delays in the loop.", function(on)
@@ -445,19 +560,8 @@ end
 		end
 	end)
 
-	menu.action(ascm, "Delete Attackers", {"atkyeet"}, "deletes attackers as well as any police or noose units near the player.", function(on_click)
-		local player_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid) 
-		local pos = ENTITY.GET_ENTITY_COORDS(player_ped)
-		for _, ped in ipairs(GET_NEARBY_PEDS(pid, 2500)) do
-		local pt = PED.GET_PED_TYPE(ped)
-			if not PED.IS_PED_A_PLAYER(ped) then  
-				if pt == 6 or pt == 27 then -- 
-					entities.delete_by_handle(ped)
-				end
-			end
-		end
-	end)
 
+distance = 100
 menu.slider(ascm, "Distance", {""}, "the distance of the section of road from the target that the NPC will spawn at. Will apply to ALL attackers in this section. 100 is about a block away.", 10, 900, 100, 10, function(s)
 	distance = s
 end)
@@ -507,15 +611,11 @@ end)
 		
 	end)
 
-		menu.toggle(ascm, "Ground Unit Always Attacks", {""}, "", function(on)
-		gutask = on
-	end)
-	
-	menu.action(ascm, "FIB Attack", {"fibatk"}, "can be hard to escape from no matter the car, as long as it cant fly", function(on_click)
+	menu.action(ascm, "FIB Super Car", {"fibatk"}, "can be hard to escape from no matter the car, as long as it cant fly", function(on_click)
         local player_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local vehicleHash = util.joaat("krieger")
-		local pedHash = 1558115333 
-		requestModels(vehicleHash, pedHash)
+        local vehicleHash = random{util.joaat("krieger"), util.joaat("xa21"), util.joaat("corsita"), util.joaat("schlagen")}
+		local pedHash = 1558115333
+		requestModels(util.joaat("krieger"), util.joaat("xa21"), util.joaat("corsita"), util.joaat("schlagen"), pedHash)
 		local targetPed = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
 		local pos = ENTITY.GET_ENTITY_COORDS(targetPed)
 		local vehicle = entities.create_vehicle(vehicleHash, pos, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
@@ -542,6 +642,7 @@ end)
 				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 9999, false, true)
 				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
             end
+			HIGH_DOWNFORCE(vehicle)
 			PED.SET_PED_AS_COP(clown, true)
 			addBlipForEntity(vehicle, 672, 40)
 			PED.SET_PED_CONFIG_FLAG(clown, 281, true)
@@ -571,7 +672,15 @@ end)
 			VEHICLE.SET_VEHICLE_MOD(vehicle, 0, 3) --spoiler
 			VEHICLE.SET_VEHICLE_MOD(vehicle, 23, 0)--wheel type?
 			VEHICLE.SET_VEHICLE_EXTRA_COLOURS(vehicle, 0, 0) --wheel color
-			VEHICLE.SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(vehicle, 4) --plate type, 4 is SA EXEMPT which law enforcement and government vehicles use
+			VEHICLE.SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(vehicle, 4) --plate type, 4 is SA EXEMPT which law enforcement and government vehicles use\
+			TASK.SET_DRIVE_TASK_DRIVING_STYLE(clown, 17564220)
+			TASK.SET_DRIVE_TASK_MAX_CRUISE_SPEED(clown, 300)
+			TASK.SET_DRIVE_TASK_CRUISE_SPEED(clown, 280)
+			WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x8B3C480B)
+			WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x4DB62ABE)
+			WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x5DD5DBD5)
+			WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x9D65907A)
+			WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x420FD713)
 			if godmodeatk then
 				ENTITY.SET_ENTITY_INVINCIBLE(vehicle, true)
 			end
@@ -598,7 +707,7 @@ end)
     end)
 
 
-	menu.action(ascm, "FIB Van", {"fibatk"}, "can be hard to escape from no matter the car, as long as it cant fly", function(on_click)
+	menu.action(ascm, "FIB Van", {"fibatk"}, "", function(on_click)
         local player_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicleHash = util.joaat("fbi2")
 		local pedHash = 1558115333
@@ -682,10 +791,11 @@ end)
             end
         end
     end)
-
-	menu.action(ascm, "FIB Cruisier", {"fibc"}, "FIB c", function(on_click)
+	
+	
+	menu.action(ascm, "FIB TRUCK", {""}, "I HAVE A TRUCK said the FIB agents.", function(on_click)
         local player_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local vehicleHash = util.joaat("police4")
+        local vehicleHash = util.joaat("phantom3")
 		local pedHash = 1558115333
 		requestModels(vehicleHash, pedHash)
 		local targetPed = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
@@ -757,6 +867,272 @@ end)
                 TASK.TASK_VEHICLE_CHASE(clown, player_ped)
 				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 1000, false, true)
             else
+				TASK.TASK_COMBAT_PED(clown, player_ped, 0, 16)
+                WEAPON.GIVE_WEAPON_TO_PED(clown, 4208062921, 9999, false, true)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x8B3C480B)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x4DB62ABE)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x5DD5DBD5)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x9D65907A)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x420FD713)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            end
+        end
+    end)
+
+	menu.action(ascm, "FIB Tampa", {""}, "DEATH!!!!!!", function(on_click)
+        local player_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local vehicleHash = util.joaat("tampa3")
+		local pedHash = 1558115333
+		requestModels(vehicleHash, pedHash)
+		local targetPed = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+		local pos = ENTITY.GET_ENTITY_COORDS(targetPed)
+		local vehicle = entities.create_vehicle(vehicleHash, pos, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
+		if not ENTITY.DOES_ENTITY_EXIST(vehicle) then
+			return
+		end
+
+		local offset = getOffsetFromEntityGivenDistance(vehicle, distance)
+		local outCoords = v3.new()
+		local outHeading = memory.alloc()
+
+		if PATHFIND.GET_CLOSEST_VEHICLE_NODE_WITH_HEADING(offset.x, offset.y, offset.z, outCoords, outHeading, 1, 3.0, 0) then
+			ENTITY.SET_ENTITY_COORDS(vehicle, v3.getX(outCoords), v3.getY(outCoords), v3.getZ(outCoords))
+			ENTITY.SET_ENTITY_HEADING(vehicle, memory.read_float(outHeading))
+			VEHICLE.SET_VEHICLE_ENGINE_ON(vehicle, true, true, true)
+		end
+        for i=-1, VEHICLE.GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(vehicle) - 1 do
+            local clown = entities.create_ped(2, pedHash, outCoords, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
+            PED.SET_PED_INTO_VEHICLE(clown, vehicle, i)
+            if i % 2 == 0 then
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 9999, false, true)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            else
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 9999, false, true)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            end
+			PED.SET_PED_AS_COP(clown, true)
+			addBlipForEntity(vehicle, 812, 40)
+			PED.SET_PED_CONFIG_FLAG(clown, 281, true)
+			PED.SET_PED_CONFIG_FLAG(clown, 2, true)
+			PED.SET_PED_CONFIG_FLAG(clown, 33, false)
+            PED.SET_PED_COMBAT_ATTRIBUTES(clown, 5, true)
+            PED.SET_PED_COMBAT_ATTRIBUTES(clown, 46, true)
+			PED.SET_PED_ACCURACY(clown, 100.0)
+			PED.SET_PED_HEARING_RANGE(clown, 99999)
+			PED.SET_PED_RANDOM_COMPONENT_VARIATION(clown, 0)
+			VEHICLE.SET_VEHICLE_DOORS_LOCKED(vehicle, 3)
+			VEHICLE.SET_VEHICLE_NUMBER_PLATE_TEXT(vehicle, "FIB")
+			VEHICLE.SET_VEHICLE_EXPLODES_ON_HIGH_EXPLOSION_DAMAGE(vehicle, false)
+			VEHICLE.MODIFY_VEHICLE_TOP_SPEED(vehicle, 50)
+			PED.SET_PED_MAX_HEALTH(clown, 150)
+			ENTITY.SET_ENTITY_PROOFS(ped, false, true, false, false, true, false, false, false)
+			ENTITY.SET_ENTITY_HEALTH(clown, 150)
+			PED.SET_PED_ARMOUR(clown, 100)
+			PED.SET_PED_SHOOT_RATE(clown, 5)
+			VEHICLE.SET_VEHICLE_MOD_KIT(vehicle, 0)
+			VEHICLE.SET_VEHICLE_CUSTOM_PRIMARY_COLOUR(vehicle, 0, 0, 0) --black
+			VEHICLE.SET_VEHICLE_CUSTOM_SECONDARY_COLOUR(vehicle, 0, 0, 0)
+			VEHICLE.SET_VEHICLE_MOD_COLOR_1(vehicle, 3, 0, 0) --matte finish
+			VEHICLE.SET_VEHICLE_MOD_COLOR_2(vehicle, 3, 0, 0)-- matte secondary
+			VEHICLE.SET_VEHICLE_WHEEL_TYPE(vehicle, 11) --street wheel type
+			PED.SET_PED_SUFFERS_CRITICAL_HITS(clown, false)
+			VEHICLE.SET_VEHICLE_MOD(vehicle, 0, 3) --spoiler
+			VEHICLE.SET_VEHICLE_MOD(vehicle, 23, 0)--wheel type?
+			VEHICLE.SET_VEHICLE_MOD(vehicle, 10, 0)
+			VEHICLE.SET_VEHICLE_EXTRA_COLOURS(vehicle, 0, 0) --wheel color
+			VEHICLE.SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(vehicle, 4) --plate type, 4 is SA EXEMPT which law enforcement and government vehicles use
+			if godmodeatk then
+				ENTITY.SET_ENTITY_INVINCIBLE(vehicle, true)
+			end
+			if pcar then 
+				PED.SET_PED_COMBAT_ATTRIBUTES(clown, 3, false)
+			end
+			if d then
+				PED.SET_AI_WEAPON_DAMAGE_MODIFIER(clown, 3000000)
+			end
+            if i == -1 then
+                TASK.TASK_VEHICLE_CHASE(clown, player_ped)
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 1000, false, true)
+				PED.SET_PED_COMBAT_ATTRIBUTES(clown, 3, false)
+            else
+				TASK.TASK_COMBAT_PED(clown, player_ped, 0, 16)
+                WEAPON.GIVE_WEAPON_TO_PED(clown, 4208062921, 9999, false, true)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x8B3C480B)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x4DB62ABE)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x5DD5DBD5)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x9D65907A)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x420FD713)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            end
+        end
+    end)
+
+	menu.action(ascm, "FIB Bati", {"fibb"}, "they can fall off lol cry about it", function(on_click)
+        local player_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local vehicleHash = util.joaat("akuma")
+		local pedHash = 1558115333
+		requestModels(util.joaat("akuma"), pedHash)
+		local targetPed = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+		local pos = ENTITY.GET_ENTITY_COORDS(targetPed)
+		local vehicle = entities.create_vehicle(vehicleHash, pos, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
+		if not ENTITY.DOES_ENTITY_EXIST(vehicle) then
+			return
+		end
+
+		local offset = getOffsetFromEntityGivenDistance(vehicle, distance)
+		local outCoords = v3.new()
+		local outHeading = memory.alloc()
+
+		if PATHFIND.GET_CLOSEST_VEHICLE_NODE_WITH_HEADING(offset.x, offset.y, offset.z, outCoords, outHeading, 1, 3.0, 0) then
+			ENTITY.SET_ENTITY_COORDS(vehicle, v3.getX(outCoords), v3.getY(outCoords), v3.getZ(outCoords))
+			ENTITY.SET_ENTITY_HEADING(vehicle, memory.read_float(outHeading))
+			VEHICLE.SET_VEHICLE_ENGINE_ON(vehicle, true, true, true)
+		end
+        for i=-1, VEHICLE.GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(vehicle) - 1 do
+            local clown = entities.create_ped(2, pedHash, outCoords, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
+            PED.SET_PED_INTO_VEHICLE(clown, vehicle, i)
+            if i % 2 == 0 then
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 9999, false, true)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            else
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 9999, false, true)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            end
+			PED.SET_PED_AS_COP(clown, true)
+			addBlipForEntity(vehicle, 812, 40)
+			PED.SET_PED_CONFIG_FLAG(clown, 281, true)
+			PED.SET_PED_CONFIG_FLAG(clown, 2, true)
+			PED.SET_PED_CONFIG_FLAG(clown, 33, false)
+            PED.SET_PED_COMBAT_ATTRIBUTES(clown, 5, true)
+            PED.SET_PED_COMBAT_ATTRIBUTES(clown, 46, true)
+			PED.SET_PED_ACCURACY(clown, 100.0)
+			PED.SET_PED_HEARING_RANGE(clown, 99999)
+			PED.SET_PED_RANDOM_COMPONENT_VARIATION(clown, 0)
+			VEHICLE.SET_VEHICLE_DOORS_LOCKED(vehicle, 3)
+			VEHICLE.SET_VEHICLE_NUMBER_PLATE_TEXT(vehicle, "FIB")
+			VEHICLE.SET_VEHICLE_EXPLODES_ON_HIGH_EXPLOSION_DAMAGE(vehicle, false)
+			VEHICLE.MODIFY_VEHICLE_TOP_SPEED(vehicle, 200)
+			PED.SET_PED_MAX_HEALTH(clown, 150)
+			ENTITY.SET_ENTITY_PROOFS(ped, false, true, false, false, true, false, false, false)
+			ENTITY.SET_ENTITY_HEALTH(clown, 150)
+			PED.SET_PED_ARMOUR(clown, 100)
+			PED.SET_PED_SHOOT_RATE(clown, 5)
+			VEHICLE.SET_VEHICLE_MOD_KIT(vehicle, 0)
+			VEHICLE.SET_VEHICLE_CUSTOM_PRIMARY_COLOUR(vehicle, 0, 0, 0) --black
+			VEHICLE.SET_VEHICLE_CUSTOM_SECONDARY_COLOUR(vehicle, 0, 0, 0)
+			VEHICLE.SET_VEHICLE_MOD_COLOR_1(vehicle, 3, 0, 0) --matte finish
+			VEHICLE.SET_VEHICLE_MOD_COLOR_2(vehicle, 3, 0, 0)-- matte secondary
+			VEHICLE.SET_VEHICLE_WHEEL_TYPE(vehicle, 11) --street wheel type
+			PED.SET_PED_SUFFERS_CRITICAL_HITS(clown, false)
+			VEHICLE.SET_VEHICLE_MOD(vehicle, 0, 3) --spoiler
+			VEHICLE.SET_VEHICLE_MOD(vehicle, 23, 0)--wheel type?
+			VEHICLE.SET_VEHICLE_EXTRA_COLOURS(vehicle, 0, 0) --wheel color
+			VEHICLE.SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(vehicle, 4) --plate type, 4 is SA EXEMPT which law enforcement and government vehicles use
+			TASK.SET_DRIVE_TASK_DRIVING_STYLE(clown, 17564220)
+			TASK.SET_DRIVE_TASK_MAX_CRUISE_SPEED(clown, 300)
+			TASK.SET_DRIVE_TASK_CRUISE_SPEED(clown, 280)
+			if godmodeatk then
+				ENTITY.SET_ENTITY_INVINCIBLE(vehicle, true)
+			end
+			if pcar then 
+				PED.SET_PED_COMBAT_ATTRIBUTES(clown, 3, false)
+			end
+			if d then
+				PED.SET_AI_WEAPON_DAMAGE_MODIFIER(clown, 3000000)
+			end
+            if i == -1 then
+                TASK.TASK_VEHICLE_CHASE(clown, player_ped)
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 1000, false, true)
+            else
+                TASK.TASK_COMBAT_PED(clown, player_ped, 0, 16)
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 4208062921, 9999, false, true)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x8B3C480B)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x4DB62ABE)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x5DD5DBD5)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x9D65907A)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x420FD713)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            end
+        end
+    end)
+
+	menu.action(ascm, "FIB Cruisier", {"fibc"}, "Random choice between the FIB buffalo and unmarked crown vic", function(on_click)
+        local player_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local vehicleHash = random{util.joaat("police4"), util.joaat("fbi")}
+		local pedHash = 1558115333
+		requestModels(-1973172295, 1127131465, pedHash)
+		local targetPed = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+		local pos = ENTITY.GET_ENTITY_COORDS(targetPed)
+		local vehicle = entities.create_vehicle(vehicleHash, pos, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
+		if not ENTITY.DOES_ENTITY_EXIST(vehicle) then
+			return
+		end
+
+		local offset = getOffsetFromEntityGivenDistance(vehicle, distance)
+		local outCoords = v3.new()
+		local outHeading = memory.alloc()
+
+		if PATHFIND.GET_CLOSEST_VEHICLE_NODE_WITH_HEADING(offset.x, offset.y, offset.z, outCoords, outHeading, 1, 3.0, 0) then
+			ENTITY.SET_ENTITY_COORDS(vehicle, v3.getX(outCoords), v3.getY(outCoords), v3.getZ(outCoords))
+			ENTITY.SET_ENTITY_HEADING(vehicle, memory.read_float(outHeading))
+			VEHICLE.SET_VEHICLE_ENGINE_ON(vehicle, true, true, true)
+		end
+        for i=-1, VEHICLE.GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(vehicle) - 1 do
+            local clown = entities.create_ped(2, pedHash, outCoords, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
+            PED.SET_PED_INTO_VEHICLE(clown, vehicle, i)
+            if i % 2 == 0 then
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 9999, false, true)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            else
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 9999, false, true)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            end
+			PED.SET_PED_AS_COP(clown, true)
+			addBlipForEntity(vehicle, 812, 40)
+			PED.SET_PED_CONFIG_FLAG(clown, 281, true)
+			PED.SET_PED_CONFIG_FLAG(clown, 2, true)
+			PED.SET_PED_CONFIG_FLAG(clown, 33, false)
+            PED.SET_PED_COMBAT_ATTRIBUTES(clown, 5, true)
+            PED.SET_PED_COMBAT_ATTRIBUTES(clown, 46, true)
+			PED.SET_PED_ACCURACY(clown, 100.0)
+			PED.SET_PED_HEARING_RANGE(clown, 99999)
+			PED.SET_PED_RANDOM_COMPONENT_VARIATION(clown, 0)
+			VEHICLE.SET_VEHICLE_DOORS_LOCKED(vehicle, 3)
+			VEHICLE.SET_VEHICLE_NUMBER_PLATE_TEXT(vehicle, "FIB")
+			VEHICLE.SET_VEHICLE_EXPLODES_ON_HIGH_EXPLOSION_DAMAGE(vehicle, false)
+			VEHICLE.MODIFY_VEHICLE_TOP_SPEED(vehicle, 50)
+			PED.SET_PED_MAX_HEALTH(clown, 150)
+			ENTITY.SET_ENTITY_PROOFS(ped, false, true, false, false, true, false, false, false)
+			ENTITY.SET_ENTITY_HEALTH(clown, 150)
+			PED.SET_PED_ARMOUR(clown, 100)
+			PED.SET_PED_SHOOT_RATE(clown, 5)
+			VEHICLE.SET_VEHICLE_MOD_KIT(vehicle, 0)
+			VEHICLE.SET_VEHICLE_CUSTOM_PRIMARY_COLOUR(vehicle, 0, 0, 0) --black
+			VEHICLE.SET_VEHICLE_CUSTOM_SECONDARY_COLOUR(vehicle, 0, 0, 0)
+			VEHICLE.SET_VEHICLE_MOD_COLOR_1(vehicle, 3, 0, 0) --matte finish
+			VEHICLE.SET_VEHICLE_MOD_COLOR_2(vehicle, 3, 0, 0)-- matte secondary
+			VEHICLE.SET_VEHICLE_WHEEL_TYPE(vehicle, 11) --street wheel type
+			PED.SET_PED_SUFFERS_CRITICAL_HITS(clown, false)
+			VEHICLE.SET_VEHICLE_MOD(vehicle, 0, 3) --spoiler
+			VEHICLE.SET_VEHICLE_MOD(vehicle, 23, 0)--wheel type?
+			VEHICLE.SET_VEHICLE_EXTRA_COLOURS(vehicle, 0, 0) --wheel color
+			VEHICLE.SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(vehicle, 4) --plate type, 4 is SA EXEMPT which law enforcement and government vehicles use
+			TASK.SET_DRIVE_TASK_DRIVING_STYLE(clown, 17564220)
+			TASK.SET_DRIVE_TASK_MAX_CRUISE_SPEED(clown, 300)
+			TASK.SET_DRIVE_TASK_CRUISE_SPEED(clown, 280)
+			if godmodeatk then
+				ENTITY.SET_ENTITY_INVINCIBLE(vehicle, true)
+			end
+			if pcar then 
+				PED.SET_PED_COMBAT_ATTRIBUTES(clown, 3, false)
+			end
+			if d then
+				PED.SET_AI_WEAPON_DAMAGE_MODIFIER(clown, 3000000)
+			end
+            if i == -1 then
+                TASK.TASK_VEHICLE_CHASE(clown, player_ped)
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 1000, false, true)
+            else
                 TASK.TASK_COMBAT_PED(clown, player_ped, 0, 16)
 				WEAPON.GIVE_WEAPON_TO_PED(clown, 4208062921, 9999, false, true)
 				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x8B3C480B)
@@ -769,7 +1145,7 @@ end)
         end
     end)
 	
-	menu.action(ascm, "FIB Heli", {"fibh"}, "", function(on_click)
+	menu.action(ascm, "FIB Heli", {"fibh"}, "might spawn with a livery on it DESPITE THE FACT THAT I SET IT AS NO LIVERY", function(on_click)
         local player_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicleHash = util.joaat("swift")
 		local pedHash = 1558115333
@@ -800,9 +1176,9 @@ end)
 			PED.SET_PED_AS_COP(clown, true)
 			VEHICLE.SET_HELI_BLADES_FULL_SPEED(vehicle)
 			addBlipForEntity(vehicle, 422, 40)
-			VEHICLE.SET_VEHICLE_MOD_KIT(van, 0)
-			VEHICLE.SET_VEHICLE_LIVERY(van, 0)
-			VEHICLE.SET_VEHICLE_MOD(van, 48, 0)
+			VEHICLE.SET_VEHICLE_MOD_KIT(vehicle, 0)
+			VEHICLE.SET_VEHICLE_LIVERY(vehicle, 0)
+			VEHICLE.SET_VEHICLE_MOD(vehicle, 48, 0)
 			PED.SET_PED_CONFIG_FLAG(clown, 281, true)
 			PED.SET_PED_CONFIG_FLAG(clown, 2, true)
 			PED.SET_PED_CONFIG_FLAG(clown, 33, false)
@@ -903,7 +1279,6 @@ end)
 			VEHICLE.SET_VEHICLE_WHEEL_TYPE(vehicle, 11) --street wheel type
 			PED.SET_PED_SUFFERS_CRITICAL_HITS(clown, false)
 			VEHICLE.SET_VEHICLE_MOD(vehicle, 0, 3) --spoiler
-			VEHICLE.SET_VEHICLE_MOD(vehicle, 23, 0)--wheel type?
 			VEHICLE.SET_VEHICLE_EXTRA_COLOURS(vehicle, 0, 0) --wheel color
 			VEHICLE.SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(vehicle, 4) --plate type, 4 is SA EXEMPT which law enforcement and government vehicles use
 			if godmodeatk then
@@ -921,6 +1296,104 @@ end)
             else
                 TASK.TASK_COMBAT_PED(clown, player_ped, 0, 16)
 				WEAPON.GIVE_WEAPON_TO_PED(clown, -1312131151, 1000, false, true)
+            end
+        end
+    end)
+
+	menu.action(ascm, "FIB Kuruma", {"fibatk2"}, "", function(on_click)
+        local player_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local vehicleHash = util.joaat("kuruma2")
+		local pedHash = 1558115333 
+		requestModels(vehicleHash, pedHash)
+		local targetPed = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+		local pos = ENTITY.GET_ENTITY_COORDS(targetPed)
+		local vehicle = entities.create_vehicle(vehicleHash, pos, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
+		if not ENTITY.DOES_ENTITY_EXIST(vehicle) then
+			return
+		end
+
+		local offset = getOffsetFromEntityGivenDistance(vehicle, distance)
+		local outCoords = v3.new()
+		local outHeading = memory.alloc()
+
+		if PATHFIND.GET_CLOSEST_VEHICLE_NODE_WITH_HEADING(offset.x, offset.y, offset.z, outCoords, outHeading, 1, 3.0, 0) then
+			ENTITY.SET_ENTITY_COORDS(vehicle, v3.getX(outCoords), v3.getY(outCoords), v3.getZ(outCoords))
+			ENTITY.SET_ENTITY_HEADING(vehicle, memory.read_float(outHeading))
+			VEHICLE.SET_VEHICLE_ENGINE_ON(vehicle, true, true, true)
+		end
+        for i=-1, VEHICLE.GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(vehicle) - 1 do
+            local clown = entities.create_ped(2, pedHash, outCoords, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
+            PED.SET_PED_INTO_VEHICLE(clown, vehicle, i)
+            if i % 2 == 0 then
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 9999, false, true)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            else
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 9999, false, true)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            end
+			VEHICLE.SET_VEHICLE_BODY_HEALTH(vehicle, 40000)
+			ENTITY.SET_ENTITY_MAX_HEALTH(vehicle, 10000)
+			ENTITY.SET_ENTITY_HEALTH(vehicle, 10000)
+			VEHICLE.SET_VEHICLE_EXPLODES_ON_HIGH_EXPLOSION_DAMAGE(vehicle, false)
+			PED.SET_PED_AS_COP(clown, true)
+			addBlipForEntity(vehicle, 672, 40)
+			PED.SET_PED_CONFIG_FLAG(clown, 281, true)
+			PED.SET_PED_CONFIG_FLAG(clown, 2, true)
+			PED.SET_PED_CONFIG_FLAG(clown, 33, false)
+            PED.SET_PED_COMBAT_ATTRIBUTES(clown, 5, true)
+            PED.SET_PED_COMBAT_ATTRIBUTES(clown, 46, true)
+			PED.SET_PED_ACCURACY(clown, 100.0)
+			PED.SET_PED_HEARING_RANGE(clown, 99999)
+			PED.SET_PED_RANDOM_COMPONENT_VARIATION(clown, 0)
+			VEHICLE.SET_VEHICLE_DOORS_LOCKED(vehicle, 3)
+			VEHICLE.SET_VEHICLE_NUMBER_PLATE_TEXT(vehicle, "FIB")
+			VEHICLE.SET_VEHICLE_EXPLODES_ON_HIGH_EXPLOSION_DAMAGE(vehicle, false)
+			VEHICLE.MODIFY_VEHICLE_TOP_SPEED(vehicle, 50)
+			PED.SET_PED_MAX_HEALTH(clown, 150)
+			ENTITY.SET_ENTITY_PROOFS(ped, false, true, false, false, true, false, false, false)
+			ENTITY.SET_ENTITY_HEALTH(clown, 150)
+			PED.SET_PED_ARMOUR(clown, 100)
+			PED.SET_PED_SHOOT_RATE(clown, 5)
+			VEHICLE.SET_VEHICLE_MOD_KIT(vehicle, 0)
+			VEHICLE.SET_VEHICLE_CUSTOM_PRIMARY_COLOUR(vehicle, 0, 0, 0) --black
+			VEHICLE.SET_VEHICLE_CUSTOM_SECONDARY_COLOUR(vehicle, 0, 0, 0)
+			VEHICLE.SET_VEHICLE_MOD_COLOR_1(vehicle, 3, 0, 0) --matte finish
+			VEHICLE.SET_VEHICLE_MOD_COLOR_2(vehicle, 3, 0, 0)-- matte secondary
+			VEHICLE.SET_VEHICLE_WHEEL_TYPE(vehicle, 11) --street wheel type
+			PED.SET_PED_SUFFERS_CRITICAL_HITS(clown, false)
+			VEHICLE.SET_VEHICLE_MOD(vehicle, 0, 3) --spoiler
+			VEHICLE.SET_VEHICLE_MOD(vehicle, 23, 0)--wheel type?
+			VEHICLE.SET_VEHICLE_EXTRA_COLOURS(vehicle, 0, 0) --wheel color
+			VEHICLE.SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(vehicle, 4) --plate type, 4 is SA EXEMPT which law enforcement and government vehicles use\
+			TASK.SET_DRIVE_TASK_DRIVING_STYLE(clown, 17564220)
+			TASK.SET_DRIVE_TASK_MAX_CRUISE_SPEED(clown, 300)
+			TASK.SET_DRIVE_TASK_CRUISE_SPEED(clown, 280)
+			WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x8B3C480B)
+			WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x4DB62ABE)
+			WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x5DD5DBD5)
+			WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x9D65907A)
+			WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x420FD713)
+			if godmodeatk then
+				ENTITY.SET_ENTITY_INVINCIBLE(vehicle, true)
+			end
+			if pcar then 
+				PED.SET_PED_COMBAT_ATTRIBUTES(clown, 3, false)
+			end
+			if d then
+				PED.SET_AI_WEAPON_DAMAGE_MODIFIER(clown, 3000000)
+			end
+            if i == -1 then
+                TASK.TASK_VEHICLE_CHASE(clown, player_ped)
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 1000, false, true)
+            else
+                TASK.TASK_COMBAT_PED(clown, player_ped, 0, 16)
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 4208062921, 9999, false, true)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x8B3C480B)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x4DB62ABE)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x5DD5DBD5)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x9D65907A)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x420FD713)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
             end
         end
     end)
@@ -1120,9 +1593,173 @@ end)
         end
     end)
 
-		menu.toggle(ascm, "Attacker does not exit vehicle", {"veh"}, "does what it says on the tin, only applies to vehicle attackers.", function(on)
-		pcar = on
-	end)
+distance2 = 100
+menu.slider(asa, "Distance", {""}, "the distance of the section of road from the target that the NPC will spawn at. Will apply to ALL attackers in this section. 100 is about a block away.", 10, 900, 100, 10, function(s)
+	distance2 = s
+end)
+	
+		menu.action(asa, "Army Half Track", {"aht"}, "These mfs dont exit the car, they just chase and shoot", function(on_click)
+        local player_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local vehicleHash = util.joaat("halftrack")
+		local clown_hash = {"1490458366", "1925237458"}
+		local marine1 = 1925237458
+		local marine2 = 1490458366
+		requestModels(vehicleHash, marine1, marine2)
+		local targetPed = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+		local pos = ENTITY.GET_ENTITY_COORDS(targetPed)
+		local vehicle = entities.create_vehicle(vehicleHash, pos, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
+		if not ENTITY.DOES_ENTITY_EXIST(vehicle) then
+			return
+		end
+
+		local offset = getOffsetFromEntityGivenDistance(vehicle, distance2)
+		local outCoords = v3.new()
+		local outHeading = memory.alloc()
+
+		if PATHFIND.GET_CLOSEST_VEHICLE_NODE_WITH_HEADING(offset.x, offset.y, offset.z, outCoords, outHeading, 1, 3.0, 0) then
+			ENTITY.SET_ENTITY_COORDS(vehicle, v3.getX(outCoords), v3.getY(outCoords), v3.getZ(outCoords))
+			ENTITY.SET_ENTITY_HEADING(vehicle, memory.read_float(outHeading))
+			VEHICLE.SET_VEHICLE_ENGINE_ON(vehicle, true, true, true)
+		end
+        for i=-1, VEHICLE.GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(vehicle) - 1 do
+            local clown = entities.create_ped(2, random(clown_hash), outCoords, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
+            PED.SET_PED_INTO_VEHICLE(clown, vehicle, i)
+            if i % 2 == 0 then
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 9999, false, true)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            else
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 9999, false, true)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            end
+			PED.SET_PED_AS_COP(clown, true)
+			addBlipForEntity(vehicle, 724, 85)
+			PED.SET_PED_CONFIG_FLAG(clown, 281, true)
+			PED.SET_PED_CONFIG_FLAG(clown, 2, true)
+			PED.SET_PED_CONFIG_FLAG(clown, 33, false)
+            PED.SET_PED_COMBAT_ATTRIBUTES(clown, 5, true)
+            PED.SET_PED_COMBAT_ATTRIBUTES(clown, 46, true)
+			PED.SET_PED_ACCURACY(clown, 100.0)
+			PED.SET_PED_HEARING_RANGE(clown, 99999)
+			PED.SET_PED_RANDOM_COMPONENT_VARIATION(clown, 0)
+			VEHICLE.SET_VEHICLE_DOORS_LOCKED(vehicle, 3)
+			VEHICLE.SET_VEHICLE_EXPLODES_ON_HIGH_EXPLOSION_DAMAGE(vehicle, false)
+			VEHICLE.MODIFY_VEHICLE_TOP_SPEED(vehicle, 50)
+			PED.SET_PED_MAX_HEALTH(clown, 150)
+			ENTITY.SET_ENTITY_PROOFS(ped, false, true, false, false, true, false, false, false)
+			ENTITY.SET_ENTITY_HEALTH(clown, 150)
+			PED.SET_PED_ARMOUR(clown, 100)
+			PED.SET_PED_SHOOT_RATE(clown, 5)
+			VEHICLE.SET_VEHICLE_MOD_KIT(vehicle, 0)
+			VEHICLE.SET_VEHICLE_COLOURS(vehicle, 154, 154)
+			VEHICLE.SET_VEHICLE_MOD_COLOR_1(vehicle, 3, 154, 0) --matte finish
+			VEHICLE.SET_VEHICLE_MOD_COLOR_2(vehicle, 3, 154, 0)-- matte secondary
+			PED.SET_PED_SUFFERS_CRITICAL_HITS(clown, false)
+			VEHICLE.SET_VEHICLE_MOD(vehicle, 10, 0) --rear turret
+			VEHICLE.SET_VEHICLE_EXTRA_COLOURS(vehicle, 0, 154) --wheel color
+			VEHICLE.SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(vehicle, 4) --plate type, 4 is SA EXEMPT which law enforcement and government vehicles use
+			PED.SET_PED_COMBAT_ATTRIBUTES(clown, 3, false)
+			if godmodeatk then
+				ENTITY.SET_ENTITY_INVINCIBLE(vehicle, true)
+			end
+            if i == -1 then
+                TASK.TASK_VEHICLE_CHASE(clown, player_ped)
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 1000, false, true)
+            else
+                TASK.TASK_COMBAT_PED(clown, player_ped, 0, 16)
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 4208062921, 9999, false, true)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x8B3C480B)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x4DB62ABE)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x5DD5DBD5)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x9D65907A)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x420FD713)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            end
+        end
+    end)
+
+		menu.action(asa, "Army Insurgent", {"aht"}, "These mfs dont exit the car, they just chase and shoot", function(on_click)
+        local player_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local vehicleHash = util.joaat("insurgent3")
+		local clown_hash = {"1490458366", "1925237458"}
+		local marine1 = 1925237458
+		local marine2 = 1490458366
+		requestModels(vehicleHash, marine1, marine2)
+		local targetPed = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+		local pos = ENTITY.GET_ENTITY_COORDS(targetPed)
+		local vehicle = entities.create_vehicle(vehicleHash, pos, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
+		if not ENTITY.DOES_ENTITY_EXIST(vehicle) then
+			return
+		end
+
+		local offset = getOffsetFromEntityGivenDistance(vehicle, distance2)
+		local outCoords = v3.new()
+		local outHeading = memory.alloc()
+
+		if PATHFIND.GET_CLOSEST_VEHICLE_NODE_WITH_HEADING(offset.x, offset.y, offset.z, outCoords, outHeading, 1, 3.0, 0) then
+			ENTITY.SET_ENTITY_COORDS(vehicle, v3.getX(outCoords), v3.getY(outCoords), v3.getZ(outCoords))
+			ENTITY.SET_ENTITY_HEADING(vehicle, memory.read_float(outHeading))
+			VEHICLE.SET_VEHICLE_ENGINE_ON(vehicle, true, true, true)
+		end
+        for i=-1, VEHICLE.GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(vehicle) - 1 do
+            local clown = entities.create_ped(2, random(clown_hash), outCoords, CAM.GET_GAMEPLAY_CAM_ROT(0).z)
+            PED.SET_PED_INTO_VEHICLE(clown, vehicle, i)
+            if i % 2 == 0 then
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 9999, false, true)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            else
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 9999, false, true)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            end
+			PED.SET_PED_AS_COP(clown, true)
+			addBlipForEntity(vehicle, 724, 85)
+			PED.SET_PED_CONFIG_FLAG(clown, 281, true)
+			PED.SET_PED_CONFIG_FLAG(clown, 2, true)
+			PED.SET_PED_CONFIG_FLAG(clown, 33, false)
+            PED.SET_PED_COMBAT_ATTRIBUTES(clown, 5, true)
+            PED.SET_PED_COMBAT_ATTRIBUTES(clown, 46, true)
+			PED.SET_PED_ACCURACY(clown, 100.0)
+			PED.SET_PED_HEARING_RANGE(clown, 99999)
+			PED.SET_PED_RANDOM_COMPONENT_VARIATION(clown, 0)
+			VEHICLE.SET_VEHICLE_DOORS_LOCKED(vehicle, 3)
+			VEHICLE.SET_VEHICLE_EXPLODES_ON_HIGH_EXPLOSION_DAMAGE(vehicle, false)
+			VEHICLE.MODIFY_VEHICLE_TOP_SPEED(vehicle, 50)
+			PED.SET_PED_MAX_HEALTH(clown, 150)
+			ENTITY.SET_ENTITY_PROOFS(ped, false, true, false, false, true, false, false, false)
+			ENTITY.SET_ENTITY_HEALTH(clown, 150)
+			PED.SET_PED_ARMOUR(clown, 100)
+			PED.SET_PED_SHOOT_RATE(clown, 5)
+			VEHICLE.SET_VEHICLE_MOD_KIT(vehicle, 0)
+			VEHICLE.SET_VEHICLE_COLOURS(vehicle, 154, 154)
+			VEHICLE.SET_VEHICLE_MOD_COLOR_1(vehicle, 3, 154, 0) --matte finish
+			VEHICLE.SET_VEHICLE_MOD_COLOR_2(vehicle, 3, 154, 0)-- matte secondary
+			PED.SET_PED_SUFFERS_CRITICAL_HITS(clown, false)
+			VEHICLE.SET_VEHICLE_MOD(vehicle, 10, 0) --rear turret
+			VEHICLE.SET_VEHICLE_EXTRA_COLOURS(vehicle, 0, 154) --wheel color
+			VEHICLE.SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(vehicle, 4) --plate type, 4 is SA EXEMPT which law enforcement and government vehicles use
+			PED.SET_PED_COMBAT_ATTRIBUTES(clown, 3, false)
+			PED.SET_PED_CAN_BE_KNOCKED_OFF_VEHICLE(clown, 0)
+			if godmodeatk then
+				ENTITY.SET_ENTITY_INVINCIBLE(vehicle, true)
+			end
+            if i == -1 then
+                TASK.TASK_VEHICLE_CHASE(clown, player_ped)
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 584646201 , 1000, false, true)
+            else
+                TASK.TASK_COMBAT_PED(clown, player_ped, 0, 16)
+				WEAPON.GIVE_WEAPON_TO_PED(clown, 4208062921, 9999, false, true)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x8B3C480B)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x4DB62ABE)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x5DD5DBD5)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x9D65907A)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0x420FD713)
+				WEAPON.GIVE_WEAPON_COMPONENT_TO_PED(clown, 4208062921, 0xE50C424D)
+				PED.SET_PED_FIRING_PATTERN(clown, -957453492)
+            end
+        end
+    end)
+
+
+
 
 end
 
@@ -1242,3 +1879,5 @@ function REQUEST_CONTROL_LOOP(entity)
 		NETWORK.SET_NETWORK_ID_CAN_MIGRATE(netId, true)
 	end
 end
+
+--fuck you
